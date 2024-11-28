@@ -15,7 +15,7 @@ so there is a type error if you search for a key in the response
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 from aiohttp import ClientError, ClientSession
 
@@ -40,12 +40,12 @@ class EmoncmsClient:
     url: str = None
     api_key: str = None
     request_timeout: int = 20
-    session: ClientSession | None = None
+    session: Optional[ClientSession] = None
     _close_session: bool = False
     logger = logging.getLogger(__name__)
 
     async def async_request(
-        self, path: str, params: dict[str, Any] | None = None
+        self, path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """Request emoncms server."""
         message = f"requesting emoncms on {path}"
@@ -84,7 +84,7 @@ class EmoncmsClient:
             self.logger.error(message)
         return data
 
-    async def async_get_uuid(self) -> str | None:
+    async def async_get_uuid(self) -> Optional[str]:
         """Return the unique identifier or None.
         
         first uuid version of emoncms is 11.5.7
@@ -101,14 +101,14 @@ class EmoncmsClient:
             self.logger.debug(message)
         return None
 
-    async def async_list_feeds(self) -> list[dict[str, Any]] | None:
+    async def async_list_feeds(self) -> Optional[list[dict[str, Any]]]:
         """Request emoncms feeds list."""
         feed_data = await self.async_request("/feed/list.json")
         if feed_data[SUCCESS_KEY]:
             return feed_data[MESSAGE_KEY]
         return None
 
-    async def async_get_feed_fields(self, feed_id: int) -> list[str, Any] | None:
+    async def async_get_feed_fields(self, feed_id: int) -> Optional[list[str, Any]]:
         """Get all fields for a single feed."""
         params = {"apikey": self.api_key, "id": feed_id}
         feed_data = await self.async_request("/feed/aget.json", params=params)
